@@ -1,0 +1,82 @@
+import streamlit as st
+import yt_dlp
+import os
+
+st.set_page_config(page_title="YouTube Downloader", page_icon="🎥")
+
+st.title("🎧 YouTube Downloader — MP3 / MP4")
+st.caption("Paste a YouTube URL, choose a format, and download it instantly!")
+
+# user inputs
+url = st.text_input("🎥 YouTube URL", placeholder="Paste the video link here...")
+option = st.radio("Choose format:", ["Audio (MP3)", "Video (MP4)"])
+save_dir = st.text_input("📁 Save Directory", value="./downloads")
+
+# ensure directory exists
+if save_dir and not os.path.exists(save_dir):
+    try:
+        os.makedirs(save_dir)
+        st.info(f"Created directory: {save_dir}")
+    except Exception as e:
+        st.error(f"Couldn't create directory: {e}")
+
+download_button = st.button("⬇️ Download")
+
+if download_button:
+    if not url.strip():
+        st.warning("⚠️ Please enter a valid YouTube URL!")
+    else:
+        try:
+            st.info("Downloading... please wait ⏳")
+
+            # configure yt-dlp
+            if option == "Audio (MP3)":
+                ydl_opts = {
+                    'format': 'bestaudio/best',
+                    'outtmpl': os.path.join(save_dir, '%(title)s.%(ext)s'),
+                    'quiet': True,
+                    'noplaylist': True,
+                    'postprocessors': [{
+                        'key': 'FFmpegExtractAudio',
+                        'preferredcodec': 'mp3',
+                        'preferredquality': '192',
+                    }],
+                }
+            else:  # video
+                ydl_opts = {
+                    'format': 'bestvideo+bestaudio/best',
+                    'merge_output_format': 'mp4',
+                    'outtmpl': os.path.join(save_dir, '%(title)s.%(ext)s'),
+                    'quiet': True,
+                    'noplaylist': True,
+                }
+
+            # run download
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(url, download=True)
+                title = info.get("title", "Unknown Title")
+
+            # show success + playback
+            if option == "Audio (MP3)":
+                file_path = os.path.join(save_dir, f"{title}.mp3")
+                st.success(f"✅ '{title}' downloaded as MP3!")
+                st.audio(file_path)
+                st.download_button(
+                    label="🎧 Download MP3",
+                    data=open(file_path, "rb").read(),
+                    file_name=f"{title}.mp3",
+                    mime="audio/mpeg"
+                )
+            else:
+                file_path = os.path.join(save_dir, f"{title}.mp4")
+                st.success(f"✅ '{title}' downloaded as MP4!")
+                st.video(file_path)
+                st.download_button(
+                    label="🎥 Download MP4",
+                    data=open(file_path, "rb").read(),
+                    file_name=f"{title}.mp4",
+                    mime="video/mp4"
+                )
+
+        except Exception as e:
+            st.error(f"❌ Error: {e}")
