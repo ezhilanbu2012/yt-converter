@@ -64,7 +64,7 @@ if download_button:
                 st.download_button(
                     label="🎧 Download MP3",
                     data=open(file_path, "rb").read(),
-                    file_name=f"{title}.mp3",
+                    file_name=f"{title.replace(" ", "_")}.mp3",
                     mime="audio/mpeg"
                 )
             else:
