@@ -61,10 +61,11 @@ if download_button:
                 file_path = os.path.join(save_dir, f"{title}.mp3")
                 st.success(f"✅ '{title}' downloaded as MP3!")
                 st.audio(file_path)
+                name = title.replace(" ", "_")
                 st.download_button(
                     label="🎧 Download MP3",
                     data=open(file_path, "rb").read(),
-                    file_name=f"{title.replace(" ", "_")}.mp3",
+                    file_name=f"{name}.mp3",
                     mime="audio/mpeg"
                 )
             else:
