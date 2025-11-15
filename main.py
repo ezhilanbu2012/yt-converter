@@ -29,53 +29,56 @@ if download_button:
         try:
             st.info("Downloading... please wait ⏳")
 
-            # configure yt-dlp
+            # yt-dlp setup
+            ydl_opts = {
+                'quiet': True,
+                'noplaylist': True,
+            }
+
             if option == "Audio (MP3)":
-                ydl_opts = {
+                ydl_opts.update({
                     'format': 'bestaudio/best',
-                    'outtmpl': os.path.join(save_dir, '%(title)s.%(ext)s'),
-                    'quiet': True,
-                    'noplaylist': True,
                     'postprocessors': [{
                         'key': 'FFmpegExtractAudio',
                         'preferredcodec': 'mp3',
                         'preferredquality': '192',
                     }],
-                }
-            else:  # video
-                ydl_opts = {
+                })
+            else:
+                ydl_opts.update({
                     'format': 'bestvideo+bestaudio/best',
                     'merge_output_format': 'mp4',
-                    'outtmpl': os.path.join(save_dir, '%(title)s.%(ext)s'),
-                    'quiet': True,
-                    'noplaylist': True,
-                }
+                })
 
-            # run download
+            # store files by video ID in cache
+            ydl_opts['outtmpl'] = os.path.join(save_dir, '%(id)s.%(ext)s')
+
+            # download
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(url, download=True)
                 title = info.get("title", "Unknown Title")
+                vid_id = info.get("id", "unknown")
 
-            # show success + playback
+            ext = "mp3" if option == "Audio (MP3)" else "mp4"
+            file_path = os.path.join(save_dir, f"{vid_id}.{ext}")
+
+            # success
             if option == "Audio (MP3)":
-                file_path = os.path.join(save_dir, f"{title}.mp3")
                 st.success(f"✅ '{title}' downloaded as MP3!")
                 st.audio(file_path)
-                name = title.replace(" ", "_")
                 st.download_button(
                     label="🎧 Download MP3",
                     data=open(file_path, "rb").read(),
-                    file_name=f"{name}.mp3",
+                    file_name=f"{title}.mp3",  # pretty name for client
                     mime="audio/mpeg"
                 )
             else:
-                file_path = os.path.join(save_dir, f"{title}.mp4")
                 st.success(f"✅ '{title}' downloaded as MP4!")
                 st.video(file_path)
                 st.download_button(
                     label="🎥 Download MP4",
                     data=open(file_path, "rb").read(),
-                    file_name=f"{title}.mp4",
+                    file_name=f"{title}.mp4",  # pretty name for client
                     mime="video/mp4"
                 )
 
